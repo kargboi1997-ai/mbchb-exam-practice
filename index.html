@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MedPrep - Interactive MBBS & Medical Exam Platform</title>
+    
+    <!-- iOS PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MedPrep Pro">
+    <link rel="apple-touch-icon" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/svgs/solid/heart-pulse.svg">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        medical: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#094d75',
+                            800: '#0c3a57',
+                            900: '#0f2f44',
+                        },
+                        tealmed: {
+                            500: '#0d9488',
+                            600: '#0f766e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        body {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 font-sans flex flex-col antialiased bg-slate-50">
+
+    <!-- Header Navigation -->
+    <header class="bg-slate-900 text-white sticky top-0 z-40 shadow-md border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('builder')">
+                    <div class="bg-teal-500 text-slate-900 p-2 rounded-lg font-bold flex items-center justify-center w-10 h-10 shadow">
+                        <i class="fa-solid font-bold text-xl fa-heart-pulse"></i>
+                    </div>
+                    <div>
+                        <span class="text-xl font-bold tracking-tight text-white">MedPrep <span class="text-teal-400 text-xs px-2 py-0.5 rounded bg-slate-800 border border-teal-500/30">iOS PWA</span></span>
+                        <p class="text-xs text-slate-400 hidden sm:block">Offline & Cross-Device Sync Ready</p>
+                    </div>
+                </div>
+
+                <nav class="hidden md:flex space-x-1 lg:space-x-2">
+                    <button id="nav-builder" onclick="switchTab('builder')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium transition flex items-center space-x-2 text-slate-300 hover:text-white hover:bg-slate-800">
+                        <i class="fa-solid fa-list-check text-teal-400"></i>
+                        <span>Practice Builder</span>
+                    </button>
+                    <button id="nav-exam" onclick="switchTab('exam')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium transition flex items-center space-x-2 text-slate-300 hover:text-white hover:bg-slate-800">
+                        <i class="fa-solid fa-stopwatch text-amber-400"></i>
+                        <span>Timed Exam Mode</span>
+                    </button>
+                    <button id="nav-upload" onclick="switchTab('upload')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium transition flex items-center space-x-2 text-slate-300 hover:text-white hover:bg-slate-800">
+                        <i class="fa-solid fa-file-import text-sky-400"></i>
+                        <span>Upload & Import</span>
+                    </button>
+                    <button id="nav-library" onclick="switchTab('library')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium transition flex items-center space-x-2 text-slate-300 hover:text-white hover:bg-slate-800">
+                        <i class="fa-solid fa-book-medical text-emerald-400"></i>
+                        <span>Question Library</span>
+                    </button>
+                    <button id="nav-sync" onclick="switchTab('sync')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium transition flex items-center space-x-2 text-slate-300 hover:text-white hover:bg-slate-800">
+                        <i class="fa-solid fa-cloud-arrow-up text-indigo-400"></i>
+                        <span>Cloud Sync</span>
+                    </button>
+                </nav>
+
+                <div class="flex items-center space-x-3">
+                    <div class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-xs flex items-center space-x-2">
+                        <i class="fa-solid fa-database text-teal-400"></i>
+                        <span>Total: <strong id="header-q-count" class="text-white font-mono">0</strong></span>
+                    </div>
+                    <button onclick="confirmResetDefaults()" title="Reset to default questions" class="text-slate-400 hover:text-red-400 p-2 text-sm transition">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Bar -->
+        <div class="md:hidden flex justify-around bg-slate-950 border-t border-slate-800 py-2 px-1 text-xs">
+            <button onclick="switchTab('builder')" class="mobile-nav-btn text-center text-slate-300 py-1 px-2" id="mnav-builder">
+                <i class="fa-solid fa-list-check block text-base mb-1 text-teal-400"></i> Practice
+            </button>
+            <button onclick="switchTab('exam')" class="mobile-nav-btn text-center text-slate-300 py-1 px-2" id="mnav-exam">
+                <i class="fa-solid fa-stopwatch block text-base mb-1 text-amber-400"></i> Exam
+            </button>
+            <button onclick="switchTab('upload')" class="mobile-nav-btn text-center text-slate-300 py-1 px-2" id="mnav-upload">
+                <i class="fa-solid fa-file-import block text-base mb-1 text-sky-400"></i> Upload
+            </button>
+            <button onclick="switchTab('library')" class="mobile-nav-btn text-center text-slate-300 py-1 px-2" id="mnav-library">
+                <i class="fa-solid fa-book-medical block text-base mb-1 text-emerald-400"></i> Library
+            </button>
+            <button onclick="switchTab('sync')" class="mobile-nav-btn text-center text-slate-300 py-1 px-2" id="mnav-sync">
+                <i class="fa-solid fa-cloud block text-base mb-1 text-indigo-400"></i> Sync
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col">
+
+        <!-- ALERT BANNER -->
+        <div id="toast" class="hidden fixed top-20 right-4 z-50 max-w-md p-4 rounded-xl shadow-xl text-white transition-all transform duration-300 flex items-start space-x-3">
+            <i id="toast-icon" class="fa-solid fa-circle-info text-xl mt-0.5"></i>
+            <div class="flex-1">
+                <h4 id="toast-title" class="font-bold text-sm">Notification</h4>
+                <p id="toast-message" class="text-xs text-slate-100 mt-0.5"></p>
+            </div>
+            <button onclick="hideToast()" class="text-white/80 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- TAB 1: PRACTICE QUIZ BUILDER -->
+        <section id="tab-builder" class="tab-content space-y-6">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                        <i class="fa-solid fa-filter text-teal-600"></i> Select Questions for Practice
+                    </h1>
+                    <p class="text-slate-500 text-sm mt-1">Pick specific clinical vignettes or filter by category to launch a custom study session.</p>
+                </div>
+                <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+                    <span class="text-sm font-medium text-slate-600">Selected: <strong id="selected-count-badge" class="text-teal-600 font-bold font-mono text-base">0</strong></span>
+                    <button id="start-practice-btn" onclick="startPracticeSession()" disabled class="bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold px-5 py-2.5 rounded-xl shadow-sm transition flex items-center gap-2">
+                        <i class="fa-solid fa-play"></i> Start Practice Mode
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                        <input type="text" id="builder-search" oninput="renderBuilderList()" placeholder="Search vignettes or keywords..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition">
+                    </div>
+                    <div>
+                        <select id="builder-category-filter" onchange="renderBuilderList()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition">
+                            <option value="ALL">All Categories</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="selectAllQuestions(true)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 px-3 rounded-xl text-xs transition border border-slate-200">
+                            <i class="fa-solid fa-check-double mr-1"></i> Select All
+                        </button>
+                        <button onclick="selectAllQuestions(false)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 px-3 rounded-xl text-xs transition border border-slate-200">
+                            <i class="fa-solid fa-square-minus mr-1"></i> Deselect All
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-4 bg-slate-50/80 border-b border-slate-200 flex justify-between items-center text-xs font-semibold text-slate-500">
+                    <span>CLINICAL VIGNETTES (<span id="visible-q-count">0</span> matching)</span>
+                    <span>CATEGORY & PREVIEW</span>
+                </div>
+                <div id="builder-questions-container" class="divide-y divide-slate-100 max-h-[500px] overflow-y-auto"></div>
+            </div>
+        </section>
+
+        <!-- TAB 2: TIMED EXAM MODE -->
+        <section id="tab-exam" class="tab-content space-y-6 hidden">
+            <div id="exam-setup-card" class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 max-w-3xl mx-auto space-y-6">
+                <div class="text-center space-y-2">
+                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-amber-100 text-amber-600 mb-2">
+                        <i class="fa-solid fa-stopwatch text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-900">MBBS Timed Exam Mode</h2>
+                    <p class="text-slate-500 text-sm max-w-lg mx-auto">Simulate high-stakes exam conditions with timed countdowns, exam grid navigation, and performance metrics.</p>
+                </div>
+
+                <div class="space-y-4 pt-4 border-t border-slate-100">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Target Category</label>
+                            <select id="exam-cat-select" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                <option value="ALL">All Categories (Full Comprehensive Exam)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Number of Questions</label>
+                            <input type="number" id="exam-q-limit" min="1" max="100" value="10" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Timer Duration (Minutes)</label>
+                        <input type="number" id="exam-timer-mins" min="1" max="180" value="10" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    </div>
+                </div>
+
+                <div class="pt-4">
+                    <button onclick="startTimedExam()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 px-6 rounded-xl shadow transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-play text-amber-400"></i> Begin Timed Assessment
+                    </button>
+                </div>
+            </div>
+
+            <div id="exam-active-container" class="hidden space-y-6">
+                <div class="bg-slate-900 text-white rounded-2xl p-4 shadow-lg flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="flex items-center space-x-3">
+                        <span id="exam-badge-category" class="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs px-3 py-1 rounded-full font-semibold">General Exam</span>
+                        <span class="text-xs text-slate-400">Question <strong id="exam-current-num" class="text-white">1</strong> of <strong id="exam-total-num" class="text-white">10</strong></span>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-slate-800 px-4 py-2 rounded-xl border border-slate-700">
+                        <i class="fa-solid fa-clock text-amber-400 animate-pulse"></i>
+                        <span id="exam-timer-display" class="font-mono text-lg font-bold text-amber-300">10:00</span>
+                    </div>
+                    <button onclick="confirmSubmitExam()" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition shadow">
+                        <i class="fa-solid fa-paper-plane mr-1"></i> Submit Exam
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div class="lg:col-span-3 bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6 flex flex-col justify-between">
+                        <div class="space-y-6">
+                            <div class="flex items-start justify-between gap-4">
+                                <span id="exam-q-category-tag" class="text-xs font-semibold px-2.5 py-1 rounded-md bg-teal-50 text-teal-700 border border-teal-200">Category</span>
+                                <button id="exam-flag-btn" onclick="toggleExamFlag()" class="text-slate-400 hover:text-amber-500 text-xs font-semibold flex items-center gap-1 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg transition">
+                                    <i class="fa-regular fa-flag"></i> Flag for Review
+                                </button>
+                            </div>
+                            <div id="exam-vignette" class="text-base sm:text-lg font-medium text-slate-800 leading-relaxed"></div>
+                            <div id="exam-choices-container" class="space-y-3 pt-2"></div>
+                        </div>
+                        <div class="flex justify-between items-center pt-6 border-t border-slate-100 mt-6">
+                            <button id="exam-prev-btn" onclick="navigateExam(-1)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold px-4 py-2.5 rounded-xl transition flex items-center gap-2">
+                                <i class="fa-solid fa-arrow-left"></i> Previous
+                            </button>
+                            <button id="exam-next-btn" onclick="navigateExam(1)" class="bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition flex items-center gap-2 shadow">
+                                Next <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                            <i class="fa-solid fa-grid-2"></i> Navigator
+                        </h3>
+                        <div id="exam-grid-palette" class="grid grid-cols-5 gap-2 pt-2"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: UPLOAD & IMPORT -->
+        <section id="tab-upload" class="tab-content space-y-6 hidden">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                    <i class="fa-solid fa-file-circle-plus text-sky-600"></i> Question Upload & Import System
+                </h1>
+                <p class="text-slate-500 text-sm mt-1">Add new clinical questions into specific categories manually or batch import using structured JSON.</p>
+            </div>
+
+            <div class="flex space-x-2 border-b border-slate-200">
+                <button id="subtab-json-btn" onclick="switchUploadSubtab('json')" class="py-2.5 px-4 text-sm font-semibold border-b-2 border-sky-600 text-sky-600 transition">
+                    <i class="fa-solid fa-code mr-1"></i> JSON Code Paste / Import
+                </button>
+                <button id="subtab-manual-btn" onclick="switchUploadSubtab('manual')" class="py-2.5 px-4 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition">
+                    <i class="fa-solid fa-pen-to-square mr-1"></i> Manual Form Creator
+                </button>
+            </div>
+
+            <div id="upload-subtab-json" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-4">
+                <div class="flex justify-between items-center bg-sky-50 border border-sky-100 p-4 rounded-xl">
+                    <p class="text-xs text-sky-700">Paste your custom JSON array below to append questions directly to your local database.</p>
+                    <button onclick="loadSampleJsonSchema()" class="text-xs bg-white text-sky-700 border border-sky-200 px-3 py-1.5 rounded-lg font-medium transition">Load Sample</button>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Target Category</label>
+                    <select id="json-upload-category" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm"></select>
+                </div>
+                <div>
+                    <textarea id="json-paste-box" rows="10" placeholder="[{'question':'...', ...}]" class="w-full p-4 font-mono text-xs bg-slate-900 text-sky-300 rounded-xl border border-slate-800"></textarea>
+                </div>
+                <button onclick="importJsonQuestions()" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-6 rounded-xl shadow transition">Parse & Import</button>
+            </div>
+
+            <div id="upload-subtab-manual" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-4 hidden">
+                <form id="manual-q-form" onsubmit="handleManualSubmit(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Category *</label>
+                            <select id="manual-category" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm"></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Correct Answer *</label>
+                            <select id="manual-correct" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                                <option value="A">Option A</option><option value="B">Option B</option><option value="C">Option C</option><option value="D">Option D</option><option value="E">Option E</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Clinical Vignette *</label>
+                        <textarea id="manual-vignette" required rows="3" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm"></textarea>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <input type="text" id="manual-opt-a" required placeholder="Option A" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm">
+                        <input type="text" id="manual-opt-b" required placeholder="Option B" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm">
+                        <input type="text" id="manual-opt-c" required placeholder="Option C" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm">
+                        <input type="text" id="manual-opt-d" required placeholder="Option D" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm">
+                        <input type="text" id="manual-opt-e" required placeholder="Option E" class="sm:col-span-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm">
+                    </div>
+                    <textarea id="manual-explanation" rows="2" placeholder="Explanation / Rationale" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm"></textarea>
+                    <input type="text" id="manual-pearl" placeholder="High-Yield Clinical Pearl" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                    <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 px-6 rounded-xl shadow transition">Add Question</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB 4: QUESTION LIBRARY -->
+        <section id="tab-library" class="tab-content space-y-6 hidden">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                        <i class="fa-solid fa-book-medical text-emerald-600"></i> Question Library
+                    </h1>
+                    <p class="text-slate-500 text-sm mt-1">Review and manage clinical vignettes.</p>
+                </div>
+                <button onclick="exportQuestionBankJson()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-4 py-2 rounded-xl border border-slate-300">Export JSON</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                <input type="text" id="library-search" oninput="renderLibrary()" placeholder="Filter library..." class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                <select id="library-cat-filter" onchange="renderLibrary()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm"><option value="ALL">All Categories</option></select>
+            </div>
+            <div id="library-container" class="space-y-4"></div>
+        </section>
+
+        <!-- TAB 5: CLOUD SYNC & CROSS-DEVICE STORAGE -->
+        <section id="tab-sync" class="tab-content space-y-6 hidden">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-4 max-w-2xl mx-auto">
+                <div class="text-center space-y-2">
+                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-indigo-100 text-indigo-600 mb-1">
+                        <i class="fa-solid fa-cloud text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-900">Cross-Device Cloud Sync</h2>
+                    <p class="text-slate-500 text-sm">Save your question database to a free cloud endpoint (e.g., JSONBin.io) or sync via unique Sync Key across your iPhone, iPad, and Laptop.</p>
+                </div>
+
+                <div class="space-y-4 pt-4 border-t border-slate-100">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">JSONBin Master Key / API Token (Optional)</label>
+                        <input type="password" id="sync-api-key" placeholder="$2a$10$..." class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Bin ID (For syncing across devices)</label>
+                        <input type="text" id="sync-bin-id" placeholder="65f4a..." class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 pt-2">
+                        <button onclick="pushToCloud()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow transition text-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Push to Cloud
+                        </button>
+                        <button onclick="pullFromCloud()" class="bg-slate-800 hover:bg-slate-900 text-white font-semibold py-3 rounded-xl shadow transition text-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-cloud-arrow-down"></i> Pull from Cloud
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-400 text-center pt-2">Local browser storage automatically retains all changes offline even without cloud sync credentials.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PRACTICE MODAL -->
+        <div id="practice-modal" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+                <div class="bg-slate-900 text-white p-4 sm:px-6 flex justify-between items-center border-b border-slate-800">
+                    <div class="flex items-center space-x-3">
+                        <span id="practice-cat-badge" class="bg-teal-500/20 text-teal-300 border border-teal-500/30 text-xs font-semibold px-2.5 py-1 rounded-md">Category</span>
+                        <span class="text-xs text-slate-400">Question <strong id="practice-curr-idx" class="text-white">1</strong> of <strong id="practice-total-count" class="text-white">5</strong></span>
+                    </div>
+                    <button onclick="closePracticeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                <div class="p-6 sm:p-8 overflow-y-auto space-y-6 flex-1">
+                    <div id="practice-vignette" class="text-base sm:text-lg font-medium text-slate-800 leading-relaxed"></div>
+                    <div id="practice-options" class="space-y-3"></div>
+                    <div id="practice-explanation-box" class="hidden p-5 rounded-xl border space-y-3">
+                        <div class="flex items-center gap-2 font-bold text-sm" id="practice-result-title"></div>
+                        <div id="practice-explanation-text" class="text-xs sm:text-sm text-slate-700 leading-relaxed"></div>
+                        <div id="practice-pearl-box" class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 flex items-start gap-2">
+                            <i class="fa-solid fa-star text-amber-500 mt-0.5"></i>
+                            <div><strong class="font-semibold block">Pearl:</strong><span id="practice-pearl-text"></span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-between items-center">
+                    <button id="practice-prev-btn" onclick="navigatePractice(-1)" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-semibold px-4 py-2 rounded-xl">Previous</button>
+                    <button id="practice-next-btn" onclick="navigatePractice(1)" class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold px-5 py-2.5 rounded-xl shadow">Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTS MODAL -->
+        <div id="results-modal" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+                <div class="bg-slate-900 text-white p-5 px-6 flex justify-between items-center">
+                    <h3 class="text-lg font-bold">Assessment Performance Dashboard</h3>
+                    <button onclick="closeResultsModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                <div class="p-6 overflow-y-auto space-y-6 flex-1">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200">
+                            <span class="text-xs uppercase text-slate-500 font-bold block">Score</span>
+                            <span id="results-score-percent" class="text-3xl font-bold text-slate-900 mt-1 block">0%</span>
+                            <span id="results-score-raw" class="text-xs text-slate-500">(0 / 0)</span>
+                        </div>
+                        <div id="results-status-card" class="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900">
+                            <span class="text-xs uppercase font-bold block">Result</span>
+                            <span id="results-status-text" class="text-2xl font-bold mt-1 block">PASSED</span>
+                        </div>
+                        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200">
+                            <span class="text-xs uppercase text-slate-500 font-bold block">Time Spent</span>
+                            <span id="results-time-spent" class="text-3xl font-bold text-slate-900 mt-1 block">00:00</span>
+                        </div>
+                    </div>
+                    <div id="results-category-breakdown" class="space-y-2"></div>
+                    <div id="results-review-list" class="space-y-3"></div>
+                </div>
+                <div class="bg-slate-50 px-6 py-4 border-t flex justify-end">
+                    <button onclick="closeResultsModal()" class="bg-slate-900 text-white text-xs px-5 py-2.5 rounded-xl">Close</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- APPLICATION LOGIC & PWA SERVICE WORKER -->
+    <script>
+        // Register Service Worker for Offline PWA Support
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                self.addEventListener('install', e => {
+                    e.waitUntil(
+                        caches.open('medprep-pwa-v1').then(cache => {
+                            return cache.addAll(['./', './medical_quiz_exam_portal.html']);
+                        })
+                    );
+                });
+                self.addEventListener('fetch', e => {
+                    e.respondWith(
+                        caches.match(e.request).then(response => response || fetch(e.request))
+                    );
+                });
+            `;
+            const blob = new Blob([swCode], { type: 'text/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl).catch(err => console.log('SW registration failed:', err));
+        }
+
+        const PRESET_CATEGORIES = ["Endocrinology", "Urology / Renal Physiology", "GI Physiology", "Neurophysiology", "Abdomen Anatomy", "Pelvic & Perineal Anatomy", "Head & Neck Anatomy", "Biochemistry"];
+        const DEFAULT_QUESTIONS = [
+            {
+                id: "q-1",
+                category: "Endocrinology",
+                question: "A 42-year-old female presents with fatigue, weight gain, cold intolerance, and constipation for 6 months. Physical exam shows dry skin, coarse hair, and delayed relaxation phase of deep tendon reflexes. Serum TSH is markedly elevated (24 mIU/L), and free T4 is decreased. Which autoantibody is most commonly associated with the underlying etiology of this condition?",
+                options: { A: "Anti-TSH receptor antibody (TSI)", B: "Anti-thyroid peroxidase antibody (Anti-TPO)", C: "Anti-smooth muscle antibody (ASMA)", D: "Anti-centromere antibody", E: "Anti-glutamic acid decarboxylase antibody (Anti-GAD)" },
+                correct: "B",
+                explanation: "Primary hypothyroidism is most commonly caused by Hashimoto Thyroiditis, strongly associated with Anti-Thyroid Peroxidase (Anti-TPO) antibodies.",
+                pearl: "Hashimoto thyroiditis = anti-TPO antibodies and lymphocytic infiltrate."
+            },
+            {
+                id: "q-2",
+                category: "Urology / Renal Physiology",
+                question: "A 58-year-old male with severe congestive heart failure experiences drop in urine output. Serum creatinine increases from 1.0 to 2.4 mg/dL. Urinalysis shows normal sediment. Fractional excretion of sodium (FENa) is 0.6%, and urine osmolality is 650 mOsm/kg. What is the most likely diagnosis?",
+                options: { A: "Acute tubular necrosis (ATN)", B: "Prerenal acute kidney injury", C: "Postrenal obstructive uropathy", D: "Acute interstitial nephritis (AIN)", E: "Rapidly progressive glomerulonephritis" },
+                correct: "B",
+                explanation: "Prerenal AKI is characterized by FENa < 1% and concentrated urine due to avid sodium and water reabsorption in response to low perfusion.",
+                pearl: "Prerenal AKI = FENa < 1% and concentrated urine."
+            }
+        ];
+
+        let questionBank = [];
+        let selectedQIds = new Set();
+        let currentTab = 'builder';
+        let practiceState = { questions: [], currentIndex: 0, userAnswers: {}, submitted: {} };
+        let examState = { questions: [], currentIndex: 0, userAnswers: {}, flagged: new Set(), timerSeconds: 600, timerInterval: null, totalDurationSecs: 600 };
+
+        window.onload = function() {
+            initCategoriesSelects();
+            loadQuestionBank();
+            switchTab('builder');
+        };
+
+        function loadQuestionBank() {
+            const stored = localStorage.getItem("medprep_qbank");
+            questionBank = stored ? JSON.parse(stored) : [...DEFAULT_QUESTIONS];
+            updateHeaderCount();
+            renderBuilderList();
+            renderLibrary();
+        }
+
+        function saveQuestionBank() {
+            localStorage.setItem("medprep_qbank", JSON.stringify(questionBank));
+            updateHeaderCount();
+        }
+
+        function confirmResetDefaults() {
+            if (confirm("Reset question bank to default questions?")) {
+                questionBank = [...DEFAULT_QUESTIONS];
+                saveQuestionBank();
+                selectedQIds.clear();
+                renderBuilderList();
+                renderLibrary();
+                showToast("Restored default questions!", "success");
+            }
+        }
+
+        function updateHeaderCount() {
+            document.getElementById('header-q-count').innerText = questionBank.length;
+        }
+
+        function initCategoriesSelects() {
+            ['builder-category-filter', 'exam-cat-select', 'json-upload-category', 'manual-category', 'library-cat-filter'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const isFilter = id.includes('filter') || id.includes('select');
+                el.innerHTML = isFilter ? '<option value="ALL">All Categories</option>' : '';
+                PRESET_CATEGORIES.forEach(cat => {
+                    const opt = document.createElement('option');
+                    opt.value = cat; opt.textContent = cat;
+                    el.appendChild(opt);
+                });
+            });
+        }
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('bg-slate-800', 'text-white'));
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if (activeBtn) activeBtn.classList.add('bg-slate-800', 'text-white');
+            if (tabId === 'builder') renderBuilderList();
+            if (tabId === 'library') renderLibrary();
+        }
+
+        function renderBuilderList() {
+            const container = document.getElementById('builder-questions-container');
+            const searchVal = document.getElementById('builder-search').value.toLowerCase();
+            const catVal = document.getElementById('builder-category-filter').value;
+            const filtered = questionBank.filter(q => (catVal === 'ALL' || q.category === catVal) && q.question.toLowerCase().includes(searchVal));
+            document.getElementById('visible-q-count').innerText = filtered.length;
+            container.innerHTML = filtered.length === 0 ? '<div class="p-8 text-center text-slate-400 text-sm">No matching questions.</div>' :
+                filtered.map(q => `
+                    <div class="p-4 hover:bg-slate-50 transition flex items-start gap-4 ${selectedQIds.has(q.id) ? 'bg-teal-50/30' : ''}">
+                        <input type="checkbox" onchange="toggleQuestionSelection('${q.id}')" ${selectedQIds.has(q.id) ? 'checked' : ''} class="mt-1 w-4 h-4 rounded text-teal-600 cursor-pointer">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-slate-800 line-clamp-2">${escapeHtml(q.question)}</p>
+                            <span class="inline-block text-[11px] font-semibold text-teal-700 bg-teal-100 px-2 py-0.5 rounded-full mt-2">${escapeHtml(q.category)}</span>
+                        </div>
+                    </div>
+                `).join('');
+            updateSelectedCount();
+        }
+
+        function toggleQuestionSelection(id) {
+            if (selectedQIds.has(id)) selectedQIds.delete(id); else selectedQIds.add(id);
+            updateSelectedCount();
+            renderBuilderList();
+        }
+
+        function selectAllQuestions(select) {
+            questionBank.forEach(q => { if (select) selectedQIds.add(q.id); else selectedQIds.delete(q.id); });
+            updateSelectedCount();
+            renderBuilderList();
+        }
+
+        function updateSelectedCount() {
+            document.getElementById('selected-count-badge').innerText = selectedQIds.size;
+            document.getElementById('start-practice-btn').disabled = selectedQIds.size === 0;
+        }
+
+        function startPracticeSession() {
+            if (selectedQIds.size === 0) return;
+            practiceState = { questions: questionBank.filter(q => selectedQIds.has(q.id)), currentIndex: 0, userAnswers: {}, submitted: {} };
+            document.getElementById('practice-total-count').innerText = practiceState.questions.length;
+            document.getElementById('practice-modal').classList.remove('hidden');
+            renderPracticeQuestion();
+        }
+
+        function closePracticeModal() { document.getElementById('practice-modal').classList.add('hidden'); }
+
+        function renderPracticeQuestion() {
+            const q = practiceState.questions[practiceState.currentIndex];
+            document.getElementById('practice-curr-idx').innerText = practiceState.currentIndex + 1;
+            document.getElementById('practice-cat-badge').innerText = q.category;
+            document.getElementById('practice-vignette').innerText = q.question;
+            const container = document.getElementById('practice-options');
+            container.innerHTML = '';
+            const isSubmitted = practiceState.submitted[q.id];
+            const selectedChoice = practiceState.userAnswers[q.id];
+
+            ['A', 'B', 'C', 'D', 'E'].forEach(letter => {
+                if (!q.options[letter]) return;
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left p-3.5 rounded-xl border text-sm font-medium transition flex items-center justify-between `;
+                if (isSubmitted) {
+                    if (letter === q.correct) btn.classList.add('bg-emerald-50', 'border-emerald-500', 'text-emerald-900', 'font-bold');
+                    else if (selectedChoice === letter) btn.classList.add('bg-red-50', 'border-red-400', 'text-red-900');
+                    else btn.classList.add('bg-white', 'border-slate-200', 'text-slate-400', 'opacity-60');
+                } else {
+                    btn.classList.add(selectedChoice === letter ? 'bg-teal-50 border-teal-500 text-teal-900 shadow-sm' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50');
+                    btn.onclick = () => { practiceState.userAnswers[q.id] = letter; practiceState.submitted[q.id] = true; renderPracticeQuestion(); };
+                }
+                btn.innerHTML = `<div class="flex items-center space-x-3"><span class="w-7 h-7 rounded-lg flex items-center justify-center font-mono font-bold text-xs bg-slate-100 text-slate-600">${letter}</span><span>${escapeHtml(q.options[letter])}</span></div>`;
+                container.appendChild(btn);
+            });
+
+            const explBox = document.getElementById('practice-explanation-box');
+            if (isSubmitted) {
+                explBox.classList.remove('hidden');
+                document.getElementById('practice-result-title').innerHTML = selectedChoice === q.correct ? '<i class="fa-solid fa-circle-check text-emerald-600"></i> Correct!' : '<i class="fa-solid fa-circle-xmark text-red-600"></i> Incorrect';
+                document.getElementById('practice-explanation-text').innerText = q.explanation || "";
+                document.getElementById('practice-pearl-text').innerText = q.pearl || "None";
+            } else { explBox.classList.add('hidden'); }
+            document.getElementById('practice-prev-btn').disabled = practiceState.currentIndex === 0;
+        }
+
+        function navigatePractice(delta) {
+            const nextIdx = practiceState.currentIndex + delta;
+            if (nextIdx >= 0 && nextIdx < practiceState.questions.length) {
+                practiceState.currentIndex = nextIdx;
+                renderPracticeQuestion();
+            } else if (nextIdx >= practiceState.questions.length) {
+                closePracticeModal();
+                showResultsDashboard('Practice Quiz', practiceState.questions, practiceState.userAnswers, 0);
+            }
+        }
+
+        function startTimedExam() {
+            const cat = document.getElementById('exam-cat-select').value;
+            const limit = parseInt(document.getElementById('exam-q-limit').value) || 10;
+            const mins = parseInt(document.getElementById('exam-timer-mins').value) || 10;
+            let eligible = cat === 'ALL' ? questionBank : questionBank.filter(q => q.category === cat);
+            if (eligible.length === 0) { showToast("No questions available!", "warning"); return; }
+            const shuffled = [...eligible].sort(() => 0.5 - Math.random()).slice(0, limit);
+
+            examState = { questions: shuffled, currentIndex: 0, userAnswers: {}, flagged: new Set(), timerSeconds: mins * 60, totalDurationSecs: mins * 60, timerInterval: null };
+            document.getElementById('exam-setup-card').classList.add('hidden');
+            document.getElementById('exam-active-container').classList.remove('hidden');
+            document.getElementById('exam-badge-category').innerText = cat;
+            document.getElementById('exam-total-num').innerText = shuffled.length;
+
+            clearInterval(examState.timerInterval);
+            examState.timerInterval = setInterval(() => {
+                examState.timerSeconds--;
+                const m = Math.floor(examState.timerSeconds / 60), s = examState.timerSeconds % 60;
+                document.getElementById('exam-timer-display').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                if (examState.timerSeconds <= 0) { clearInterval(examState.timerInterval); submitTimedExam(); }
+            }, 1000);
+            renderExamQuestion();
+            renderExamPalette();
+        }
+
+        function renderExamQuestion() {
+            const q = examState.questions[examState.currentIndex];
+            document.getElementById('exam-current-num').innerText = examState.currentIndex + 1;
+            document.getElementById('exam-vignette').innerText = q.question;
+            const container = document.getElementById('exam-choices-container');
+            container.innerHTML = '';
+            const selected = examState.userAnswers[q.id];
+
+            ['A', 'B', 'C', 'D', 'E'].forEach(letter => {
+                if (!q.options[letter]) return;
+                const isSel = selected === letter;
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left p-3.5 rounded-xl border text-sm font-medium transition flex items-center space-x-3 ${isSel ? 'bg-teal-50 border-teal-600 text-teal-900 font-bold' : 'bg-white border-slate-200 text-slate-700'}`;
+                btn.onclick = () => { examState.userAnswers[q.id] = letter; renderExamQuestion(); renderExamPalette(); };
+                btn.innerHTML = `<span class="w-7 h-7 rounded-lg flex items-center justify-center font-mono font-bold text-xs bg-slate-100">${letter}</span><span>${escapeHtml(q.options[letter])}</span>`;
+                container.appendChild(btn);
+            });
+            document.getElementById('exam-prev-btn').disabled = examState.currentIndex === 0;
+        }
+
+        function toggleExamFlag() {
+            const q = examState.questions[examState.currentIndex];
+            if (examState.flagged.has(q.id)) examState.flagged.delete(q.id); else examState.flagged.add(q.id);
+            renderExamPalette();
+        }
+
+        function renderExamPalette() {
+            const palette = document.getElementById('exam-grid-palette');
+            palette.innerHTML = '';
+            examState.questions.forEach((q, idx) => {
+                const isCurrent = idx === examState.currentIndex;
+                const isAnswered = !!examState.userAnswers[q.id];
+                const btn = document.createElement('button');
+                btn.className = `h-9 rounded-lg text-xs font-mono transition flex items-center justify-center ${isAnswered ? 'bg-teal-600 text-white font-bold' : 'bg-slate-100 text-slate-700'} ${isCurrent ? 'ring-2 ring-slate-900' : ''}`;
+                btn.innerText = idx + 1;
+                btn.onclick = () => { examState.currentIndex = idx; renderExamQuestion(); };
+                palette.appendChild(btn);
+            });
+        }
+
+        function navigateExam(delta) {
+            if (examState.currentIndex + delta >= 0 && examState.currentIndex + delta < examState.questions.length) {
+                examState.currentIndex += delta;
+                renderExamQuestion();
+            }
+        }
+
+        function confirmSubmitExam() { if (confirm("Submit exam?")) submitTimedExam(); }
+        function submitTimedExam() {
+            clearInterval(examState.timerInterval);
+            document.getElementById('exam-active-container').classList.add('hidden');
+            document.getElementById('exam-setup-card').classList.remove('hidden');
+            showResultsDashboard('Timed Exam', examState.questions, examState.userAnswers, examState.totalDurationSecs - examState.timerSeconds);
+        }
+
+        function showResultsDashboard(title, questions, userAnswers, timeSpentSecs) {
+            let correctCount = 0;
+            questions.forEach(q => { if (userAnswers[q.id] === q.correct) correctCount++; });
+            const percent = Math.round((correctCount / questions.length) * 100) || 0;
+            document.getElementById('results-score-percent').innerText = `${percent}%`;
+            document.getElementById('results-score-raw').innerText = `(${correctCount} / ${questions.length})`;
+            document.getElementById('results-status-text').innerText = percent >= 60 ? "PASSED" : "NEEDS REVIEW";
+            const m = Math.floor(timeSpentSecs / 60), s = timeSpentSecs % 60;
+            document.getElementById('results-time-spent').innerText = `${m}m ${s}s`;
+            
+            document.getElementById('results-review-list').innerHTML = questions.map((q, idx) => `
+                <div class="p-4 rounded-xl border ${userAnswers[q.id] === q.correct ? 'bg-emerald-50/40 border-emerald-200' : 'bg-red-50/40 border-red-200'} space-y-1">
+                    <p class="text-xs font-bold">Q${idx + 1}. ${escapeHtml(q.question)}</p>
+                    <p class="text-xs">Your Answer: <strong>${userAnswers[q.id] || 'None'}</strong> | Correct: <strong class="text-emerald-700">${q.correct}</strong></p>
+                </div>
+            `).join('');
+            document.getElementById('results-modal').classList.remove('hidden');
+        }
+
+        function closeResultsModal() { document.getElementById('results-modal').classList.add('hidden'); }
+
+        function switchUploadSubtab(type) {
+            document.getElementById('upload-subtab-json').classList.toggle('hidden', type !== 'json');
+            document.getElementById('upload-subtab-manual').classList.toggle('hidden', type !== 'manual');
+        }
+
+        function loadSampleJsonSchema() {
+            document.getElementById('json-paste-box').value = JSON.stringify([{
+                "question": "Sample clinical vignette?",
+                "options": { "A": "Opt A", "B": "Opt B", "C": "Opt C", "D": "Opt D", "E": "Opt E" },
+                "correct": "A",
+                "explanation": "Explanation here.",
+                "pearl": "High yield pearl."
+            }], null, 2);
+        }
+
+        function importJsonQuestions() {
+            try {
+                const parsed = JSON.parse(document.getElementById('json-paste-box').value);
+                (Array.isArray(parsed) ? parsed : [parsed]).forEach(item => {
+                    if (item.question && item.options && item.correct) {
+                        questionBank.push({ id: `q-${Date.now()}-${Math.random()}`, category: item.category || 'Endocrinology', ...item });
+                    }
+                });
+                saveQuestionBank();
+                showToast("Successfully imported!", "success");
+                switchTab('builder');
+            } catch (e) { showToast("Invalid JSON format", "danger"); }
+        }
+
+        function handleManualSubmit(e) {
+            e.preventDefault();
+            questionBank.push({
+                id: `q-manual-${Date.now()}`,
+                category: document.getElementById('manual-category').value,
+                question: document.getElementById('manual-vignette').value,
+                options: {
+                    A: document.getElementById('manual-opt-a').value,
+                    B: document.getElementById('manual-opt-b').value,
+                    C: document.getElementById('manual-opt-c').value,
+                    D: document.getElementById('manual-opt-d').value,
+                    E: document.getElementById('manual-opt-e').value,
+                },
+                correct: document.getElementById('manual-correct').value,
+                explanation: document.getElementById('manual-explanation').value,
+                pearl: document.getElementById('manual-pearl').value
+            });
+            saveQuestionBank();
+            document.getElementById('manual-q-form').reset();
+            showToast("Question added!", "success");
+            switchTab('builder');
+        }
+
+        function renderLibrary() {
+            const container = document.getElementById('library-container');
+            const searchVal = document.getElementById('library-search').value.toLowerCase();
+            const filtered = questionBank.filter(q => q.question.toLowerCase().includes(searchVal));
+            container.innerHTML = filtered.map(q => `
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                    <div class="flex justify-between"><span class="text-xs font-bold px-2 py-0.5 bg-slate-100 rounded">${escapeHtml(q.category)}</span><button onclick="deleteQuestion('${q.id}')" class="text-red-500 text-xs"><i class="fa-solid fa-trash"></i></button></div>
+                    <p class="text-sm font-medium">${escapeHtml(q.question)}</p>
+                </div>
+            `).join('');
+        }
+
+        function deleteQuestion(id) {
+            questionBank = questionBank.filter(q => q.id !== id);
+            saveQuestionBank();
+            renderLibrary();
+            renderBuilderList();
+        }
+
+        function exportQuestionBankJson() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(questionBank, null, 2));
+            const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "medprep_bank.json"); dl.click();
+        }
+
+        // Cross-device sync simulation using JSONBin or local storage endpoints
+        async function pushToCloud() {
+            const apiKey = document.getElementById('sync-api-key').value;
+            const binId = document.getElementById('sync-bin-id').value;
+            if (!apiKey || !binId) { showToast("Please enter Bin ID and API Key for cloud sync.", "warning"); return; }
+            try {
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': apiKey },
+                    body: JSON.stringify(questionBank)
+                });
+                if (res.ok) showToast("Successfully synced to cloud!", "success");
+                else showToast("Cloud sync failed. Check credentials.", "danger");
+            } catch (err) { showToast("Network error during cloud sync.", "danger"); }
+        }
+
+        async function pullFromCloud() {
+            const apiKey = document.getElementById('sync-api-key').value;
+            const binId = document.getElementById('sync-bin-id').value;
+            if (!apiKey || !binId) { showToast("Please enter Bin ID and API Key.", "warning"); return; }
+            try {
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+                    headers: { 'X-Master-Key': apiKey }
+                });
+                const data = await res.json();
+                if (data && data.record) {
+                    questionBank = data.record;
+                    saveQuestionBank();
+                    renderBuilderList();
+                    renderLibrary();
+                    showToast("Pulled latest questions from cloud!", "success");
+                }
+            } catch (err) { showToast("Failed to pull from cloud.", "danger"); }
+        }
+
+        function showToast(message, type = "info") {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = message;
+            toast.className = `fixed top-20 right-4 z-50 max-w-md p-4 rounded-xl shadow-xl text-white transition-all flex items-start space-x-3 ${type === 'success' ? 'bg-emerald-600' : type === 'warning' ? 'bg-amber-600' : type === 'danger' ? 'bg-red-600' : 'bg-slate-900'}`;
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+        function hideToast() { document.getElementById('toast').classList.add('hidden'); }
+        function escapeHtml(str) { return str ? str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : ''; }
+    </script>
+</body>
+</html>
